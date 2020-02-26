@@ -20,6 +20,7 @@ public class Bank
 
     public void transfer(String fromAccountNum, String toAccountNum, long amount) throws InterruptedException {
 
+        // сделать проверку чтобы отсечь непдходящие опепрации до постановки в очередь / заход в блок синхронизации
 
         if (accounts.get(fromAccountNum).getBloked() || accounts.get(toAccountNum).getBloked())
         { System.out.println("операция невозможна: один из счетов ранее был заблокирован " + fromAccountNum + " "+ toAccountNum); return;}
@@ -33,11 +34,7 @@ public class Bank
         synchronized(accounts.get(fromAccountNum).compareTo(accounts.get(toAccountNum)) > 0 ? toAccountNum : fromAccountNum) {
             synchronized(accounts.get(toAccountNum)) {
 
-
-       long balanceFromBeforeTransaction = getBalance(fromAccountNum);
-       long balanceToBeforeTransaction = getBalance(toAccountNum);
-
-
+       // если поток ожидал в очереди в других потоках мгли случится изенения этих счетов
 
         if (accounts.get(toAccountNum).getBloked() || accounts.get(fromAccountNum).getBloked())
         {System.out.println("операция невозможна: один из счетов ранее был заблокирован**** " + fromAccountNum + " " + toAccountNum); return; }
@@ -45,15 +42,16 @@ public class Bank
         if (getBalance(fromAccountNum) < amount)  { System.out.println("операция невозможна****: недостаточно средств "  + fromAccountNum + ", баланс " // проверка 2
                     + accounts.get(fromAccountNum).getMoney() + " сумма перевода  "
                     + amount); return; }
-        else
-        {
 
-            accounts.get(fromAccountNum).setMoney(balanceFromBeforeTransaction - amount);
-            accounts.get(toAccountNum).setMoney(balanceToBeforeTransaction + amount);
+        long balanceFromBeforeTransaction = getBalance(fromAccountNum);
+        long balanceToBeforeTransaction = getBalance(toAccountNum);
 
-            System.out.println("перевод выполнен со счета " + fromAccountNum + ", баланс " + accounts.get(fromAccountNum).getMoney()
+        accounts.get(fromAccountNum).setMoney(balanceFromBeforeTransaction - amount);
+        accounts.get(toAccountNum).setMoney(balanceToBeforeTransaction + amount);
+
+        System.out.println("перевод выполнен со счета " + fromAccountNum + ", баланс " + accounts.get(fromAccountNum).getMoney()
                     + " на счет " + toAccountNum + ", баланс " + accounts.get(toAccountNum).getMoney() + " сумма " + amount);
-         }
+
 
         if (amount > 50000 ) { safetyCheckTransaction(fromAccountNum, toAccountNum, amount);}
 
