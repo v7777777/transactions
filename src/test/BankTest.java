@@ -110,7 +110,7 @@ public class BankTest extends TestCase {
 
       startTransactions(transactionsAll);
 
-    Thread.sleep(30000);
+    Thread.sleep(50000);
 
     Long sumAfter =  allTransactionsBank.getAccounts().values().stream().map(v -> v.getMoney()).reduce((s1, s2) -> s1+s2 ).get();
 
