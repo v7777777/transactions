@@ -272,7 +272,7 @@ public class BankTest extends TestCase {
     private long  getTransactionAmountAll(int i, int amountOfTransactions) {
 
          if (i > amountOfTransactions*0.05 ) { return (long) (1 + Math.random()*(50000));    }
-         else { return (long) (50000 + Math.random()*(maxTransferAmount - 50000 + 1)); }
+         else { return (long) (50000 + Math.random()*(maxTransferAmount + 1)); }
 
 
 
