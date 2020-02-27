@@ -39,9 +39,6 @@ public class Bank
         if (accounts.get(toAccountNum).getBloked() || accounts.get(fromAccountNum).getBloked())
         {System.out.println("операция невозможна: один из счетов ранее был заблокирован**** " + fromAccountNum + " " + toAccountNum); return; }
 
-        if (getBalance(fromAccountNum) < amount)  { System.out.println("операция невозможна****: недостаточно средств "  + fromAccountNum + ", баланс " // проверка 2
-                    + accounts.get(fromAccountNum).getMoney() + " сумма перевода  "
-                    + amount); return; }
 
         long balanceFromBeforeTransaction = getBalance(fromAccountNum);
         long balanceToBeforeTransaction = getBalance(toAccountNum);

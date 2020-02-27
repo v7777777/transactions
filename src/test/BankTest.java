@@ -47,13 +47,15 @@ public class BankTest extends TestCase {
 
         transactionsLog = new ArrayList <>();  // все транзакции: accFrom AccTo Amount strings
 
-        createAccounts(amountOfAccounts, multiThreadBank, 1); // 1 = заполнить oneThreadBank
+        createAccounts(amountOfAccounts, multiThreadBank, BankFillingType.FillOneThreadBank); //   заполнить oneThreadBank
 
-        setTransactions(amountOfTransactions, multiThreadBank, transactions, 1); // 1 = транзакции меньше 50т
+        setTransactions(amountOfTransactions, multiThreadBank, transactions, BankFillingType.OnlyLessThanFiftyThousandTransactions); //  транзакции меньше 50т
 
-        createAccounts(amountOfAccounts, allTransactionsBank, 0); // 0 = вкл транзакции больше 50т
+        createAccounts(amountOfAccounts, allTransactionsBank, BankFillingType.NotFillOneThreadBank); // не заполнять oneThreadBank
 
-        setTransactions(amountOfTransactions, allTransactionsBank,  transactionsAll, 0);  // 0 = не заполнять oneThreadBank
+        setTransactions(amountOfTransactions, allTransactionsBank,  transactionsAll, BankFillingType.AllAmountTransactions);  //   вкл транзакции больше 50т
+
+
 
         deadlockCase = new Bank();
 
@@ -106,13 +108,13 @@ public class BankTest extends TestCase {
 
     public void test_multithread_transactions_all() throws InterruptedException {
 
-      Long sumBefore =  allTransactionsBank.getAccounts().values().stream().map(v -> v.getMoney()).reduce((s1, s2) -> s1+s2 ).get();
+        Long sumBefore =  allTransactionsBank.getAccounts().values().stream().mapToLong(v -> v.getMoney()).sum();
 
       startTransactions(transactionsAll);
 
     Thread.sleep(50000);
 
-    Long sumAfter =  allTransactionsBank.getAccounts().values().stream().map(v -> v.getMoney()).reduce((s1, s2) -> s1+s2 ).get();
+        Long sumAfter =  allTransactionsBank.getAccounts().values().stream().mapToLong(v -> v.getMoney()).sum();
 
         assertEquals(sumBefore, sumAfter);
 
@@ -122,44 +124,49 @@ public class BankTest extends TestCase {
 
     public void test_deadlock() throws InterruptedException {
 
-        Thread t1 = new Thread();
-        Thread t2 = new Thread();
+        final int TRANSFERS = 1000;
 
-        for (int i = 0; i < 10; i ++) {
-
-             t1 = new Thread(()-> {
-                try {
-                    deadlockCase.transfer("ac1", "ac2", 50000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        Thread  t1 = new Thread(()-> {
+            try {
+                for (int i = 0; i < TRANSFERS; i++) {
+                    deadlockCase.transfer("ac1", "ac2", 1);
                 }
-            });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
 
-            t1.start();
+        t1.start();
 
-             t2 = new Thread(()-> {
-                try {
-                    deadlockCase.transfer("ac2", "ac1", 100000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        Thread  t2 = new Thread(()-> {
+            try {
+                for (int j = 0; j < TRANSFERS; j++) {
+                    deadlockCase.transfer("ac2", "ac1", 1);
                 }
-            });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
 
 
-           t2.start();
 
-        }
+        t2.start();
 
-        Thread.sleep(10000);
+        t1.join();
+        t2.join();
 
-        assertEquals(t1.getState(), Thread.State.TERMINATED);
-        assertEquals(t2.getState(), Thread.State.TERMINATED);
+
+        assertTrue(deadlockCase.getAccounts().get("ac2").getMoney() == deadlockCase.getAccounts().get("ac1").getMoney());
+
+        assertEquals(Thread.State.TERMINATED, t1.getState());
+        assertEquals(Thread.State.TERMINATED, t2.getState());
 
 
 
     }
 
-  //   тест недостаточно средств
+
+    //   тест недостаточно средств
   //   тест ак заблокирован ранее
 
     public void test_baned_account_and_not_enough_money_cases() throws InterruptedException {
@@ -183,7 +190,7 @@ public class BankTest extends TestCase {
 
 // -------------- методы для заполнения банков для тестов  -------------
 
-    private void createAccounts(int amountOfAccounts, Bank bank, int param ) {
+    private void createAccounts(int amountOfAccounts, Bank bank, BankFillingType param ) {
 
         for (int i = 0; i < amountOfAccounts; i++) {
 
@@ -197,7 +204,7 @@ public class BankTest extends TestCase {
 
             bank.getAccounts().put(account.getAccNumber(), account);
 
-          if (param == 1)  {Account accountOneThread = new Account();
+          if (param.equals(BankFillingType.FillOneThreadBank))  {Account accountOneThread = new Account();
             accountOneThread.setAccNumber(account.getAccNumber());
             accountOneThread.setMoney(account.getMoney());
             oneThreadBank.getAccounts().put(accountOneThread.getAccNumber(), accountOneThread);}
@@ -210,7 +217,7 @@ public class BankTest extends TestCase {
 
     }
 
-    private void setTransactions (int amountOfTransactions, Bank bank,  ArrayList<Thread> transactions,  int param) {
+    private void setTransactions (int amountOfTransactions, Bank bank,  ArrayList<Thread> transactions,  BankFillingType param) {
 
         String [] accounts  = bank.getAccounts().keySet().toArray(new String [bank.getAccounts().keySet().size()]);
 
@@ -233,7 +240,7 @@ public class BankTest extends TestCase {
 
             long currentAmount;
 
-           if (param == 1) {   currentAmount = getTransactionAmount(i, amountOfTransactions);}
+           if (param.equals(BankFillingType.OnlyLessThanFiftyThousandTransactions)) {   currentAmount = getTransactionAmount(i, amountOfTransactions);}
            else {  currentAmount = getTransactionAmountAll (i, amountOfTransactions); }
 
             ArrayList <String> currentTransactionToLog = new ArrayList<>() {{
