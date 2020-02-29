@@ -20,12 +20,12 @@ public class Bank
 
     public void transfer(String fromAccountNum, String toAccountNum, long amount) throws InterruptedException {
 
-        // сделать проверку чтобы отсечь непдходящие опепрации до постановки в очередь / заход в блок синхронизации
+        // сделать проверку чтобы отсечь непдходящие опепрации до постановки в очередь
 
         if (accounts.get(fromAccountNum).getBloked() || accounts.get(toAccountNum).getBloked())
         { System.out.println("операция невозможна: один из счетов ранее был заблокирован " + fromAccountNum + " "+ toAccountNum); return;}
 
-//по какому акаунту фром или ту заблокировать первым
+
 
         Account lowSyncAccount;
         Account topSyncAccount;
@@ -42,8 +42,8 @@ public class Bank
        // synchronized(accounts.get(fromAccountNum).compareTo(accounts.get(toAccountNum)) > 0 ? toAccountNum :  fromAccountNum) { // потом по меньшему
 
 
-        synchronized(topSyncAccount) { // сначала блокировка по большему счету
-        synchronized(lowSyncAccount) { // потом по меньшему
+        synchronized(topSyncAccount) {
+        synchronized(lowSyncAccount) { 
 
         if (getBalance(fromAccountNum) < amount) { System.out.println("операция невозможна: недостаточно средств "  + fromAccountNum + ", баланс "
          + accounts.get(fromAccountNum).getMoney() + " сумма перевода  " + amount); return; }
