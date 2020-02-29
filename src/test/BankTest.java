@@ -72,7 +72,7 @@ public class BankTest extends TestCase {
         blockedAndNoBalanceCases.getAccounts().put("ac1", new Account());
         blockedAndNoBalanceCases.getAccounts().put("ac2", new Account());
         blockedAndNoBalanceCases.getAccounts().get("ac1").setMoney(100000);
-        blockedAndNoBalanceCases.getAccounts().get("ac2").setMoney(1000000);
+        blockedAndNoBalanceCases.getAccounts().get("ac2").setMoney(100000);
         blockedAndNoBalanceCases.getAccounts().get("ac1").setAccNumber("ac1");
         blockedAndNoBalanceCases.getAccounts().get("ac2").setAccNumber("ac2");
 
@@ -177,7 +177,9 @@ public class BankTest extends TestCase {
 
         }
 
-        assertEquals(blockedAndNoBalanceCases.getAccounts().get("ac1").getMoney(), 2000);
+        assertEquals(2000, blockedAndNoBalanceCases.getAccounts().get("ac1").getMoney());
+
+        blockedAndNoBalanceCases.getAccounts().get("ac2").setMoney(2000000);
 
         for (int i = 0; i< 15; i++) {
 

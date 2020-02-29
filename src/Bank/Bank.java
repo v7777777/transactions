@@ -25,16 +25,30 @@ public class Bank
         if (accounts.get(fromAccountNum).getBloked() || accounts.get(toAccountNum).getBloked())
         { System.out.println("операция невозможна: один из счетов ранее был заблокирован " + fromAccountNum + " "+ toAccountNum); return;}
 
-        if (getBalance(fromAccountNum) < amount)
-        { System.out.println("операция невозможна: недостаточно средств "  + fromAccountNum + ", баланс "
-                + accounts.get(fromAccountNum).getMoney() + " сумма перевода  "
-                + amount); return; }
+//по какому акаунту фром или ту заблокировать первым
+
+        Account lowSyncAccount;
+        Account topSyncAccount;
+
+        if (accounts.get(fromAccountNum).compareTo(accounts.get(toAccountNum)) > 0)
+        {lowSyncAccount =  accounts.get(toAccountNum);
+         topSyncAccount = accounts.get(fromAccountNum);
+        }
+        else {lowSyncAccount =  accounts.get(fromAccountNum);
+              topSyncAccount = accounts.get(toAccountNum);}
 
 
-        synchronized(accounts.get(fromAccountNum).compareTo(accounts.get(toAccountNum)) > 0 ? toAccountNum : fromAccountNum) {
-            synchronized(accounts.get(toAccountNum)) {
+       // synchronized(accounts.get(fromAccountNum).compareTo(accounts.get(toAccountNum)) > 0 ? fromAccountNum : toAccountNum) { // сначала по большему
+       // synchronized(accounts.get(fromAccountNum).compareTo(accounts.get(toAccountNum)) > 0 ? toAccountNum :  fromAccountNum) { // потом по меньшему
 
-       // если поток ожидал в очереди в других потоках мгли случится изенения этих счетов
+
+        synchronized(topSyncAccount) { // сначала блокировка по большему счету
+        synchronized(lowSyncAccount) { // потом по меньшему
+
+        if (getBalance(fromAccountNum) < amount) { System.out.println("операция невозможна: недостаточно средств "  + fromAccountNum + ", баланс "
+         + accounts.get(fromAccountNum).getMoney() + " сумма перевода  " + amount); return; }
+
+        // если поток ожидал в очереди в других потоках мгли случится изенения этих счетов
 
         if (accounts.get(toAccountNum).getBloked() || accounts.get(fromAccountNum).getBloked())
         {System.out.println("операция невозможна: один из счетов ранее был заблокирован**** " + fromAccountNum + " " + toAccountNum); return; }
